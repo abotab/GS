@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>استوديو الرسوم المتحركة - Animation Studio</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.3.2/pixi.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/Draggable.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- الشريط العلوي -->
+        <header class="top-bar">
+            <div class="logo">🎬 استوديو الرسوم المتحركة</div>
+            <nav class="main-nav">
+                <button class="nav-btn active" data-page="assembly">تجميع الشخصية</button>
+                <button class="nav-btn" data-page="animation">التحريك</button>
+                <button class="nav-btn" data-page="timeline">التايملاين</button>
+            </nav>
+            <div class="top-actions">
+                <button class="action-btn" id="saveBtn">💾 حفظ</button>
+                <button class="action-btn" id="exportBtn">📤 تصدير</button>
+                <button class="action-btn" id="undoBtn">↩️ تراجع</button>
+                <button class="action-btn" id="redoBtn">↪️ إعادة</button>
+            </div>
+        </header>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <!-- صفحة تجميع الشخصية -->
+            <section id="assembly-page" class="page active">
+                <div class="assembly-panel">
+                    <h2>🧩 تجميع الشخصية</h2>
+                    <div class="parts-library">
+                        <h3>مكتبة الأجزاء</h3>
+                        <div class="parts-grid">
+                            <div class="part-item" data-part="head">
+                                <div class="part-preview">👤</div>
+                                <span>الرأس</span>
+                            </div>
+                            <div class="part-item" data-part="body">
+                                <div class="part-preview">👕</div>
+                                <span>الجسم</span>
+                            </div>
+                            <div class="part-item" data-part="rightArm">
+                                <div class="part-preview">💪</div>
+                                <span>اليد اليمنى</span>
+                            </div>
+                            <div class="part-item" data-part="leftArm">
+                                <div class="part-preview">💪</div>
+                                <span>اليد اليسرى</span>
+                            </div>
+                            <div class="part-item" data-part="rightLeg">
+                                <div class="part-preview">🦵</div>
+                                <span>الرجل اليمنى</span>
+                            </div>
+                            <div class="part-item" data-part="leftLeg">
+                                <div class="part-preview">🦵</div>
+                                <span>الرجل اليسرى</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="character-preview" id="assemblyCanvas">
+                        <div class="canvas-placeholder">
+                            <p>اسحب الأجزاء هنا لتجميع الشخصية</p>
+                        </div>
+                    </div>
+                    <div class="assembly-controls">
+                        <button class="control-btn" id="clearCharacter">🗑️ مسح</button>
+                        <button class="control-btn primary" id="saveCharacter">✅ حفظ الشخصية</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- صفحة التحريك -->
+            <section id="animation-page" class="page">
+                <div class="workspace">
+                    <!-- الشريط الجانبي للأدوات -->
+                    <aside class="tools-panel">
+                        <div class="tool-section">
+                            <h3>🛠️ الأدوات</h3>
+                            <div class="tool-grid">
+                                <button class="tool-btn active" data-tool="select">
+                                    <span class="tool-icon">🔍</span>
+                                    <span>تحديد</span>
+                                </button>
+                                <button class="tool-btn" data-tool="bone">
+                                    <span class="tool-icon">🦴</span>
+                                    <span>عظمة</span>
+                                </button>
+                                <button class="tool-btn" data-tool="fk">
+                                    <span class="tool-icon">🔗</span>
+                                    <span>FK</span>
+                                </button>
+                                <button class="tool-btn" data-tool="ik">
+                                    <span class="tool-icon">🎯</span>
+                                    <span>IK</span>
+                                </button>
+                                <button class="tool-btn" data-tool="draw">
+                                    <span class="tool-icon">✏️</span>
+                                    <span>رسم</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="tool-section">
+                            <h3>⚙️ خصائص العظام</h3>
+                            <div class="properties">
+                                <label>الطول: <input type="range" id="boneLength" min="10" max="200" value="50"></label>
+                                <label>السُمك: <input type="range" id="boneThickness" min="1" max="10" value="3"></label>
+                                <label>اللون: <input type="color" id="boneColor" value="#00ff88"></label>
+                            </div>
+                        </div>
+
+                        <div class="tool-section">
+                            <h3>📋 الطبقات</h3>
+                            <div class="layers-list" id="layersList">
+                                <div class="layer-item active">
+                                    <span class="layer-visibility">👁️</span>
+                                    <span class="layer-name">الشخصية الرئيسية</span>
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- منطقة الرسم -->
+                    <div class="canvas-area">
+                        <div class="canvas-container" id="mainCanvas"></div>
+                        <div class="canvas-controls">
+                            <button class="canvas-control" id="zoomIn">🔍+</button>
+                            <button class="canvas-control" id="zoomOut">🔍-</button>
+                            <button class="canvas-control" id="resetView">⌂</button>
+                            <button class="canvas-control" id="toggleGrid">⊞</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- صفحة التايم لاين -->
+            <section id="timeline-page" class="page">
+                <div class="timeline-workspace">
+                    <div class="timeline-header">
+                        <div class="transport-controls">
+                            <button class="transport-btn" id="goToStart">⏮️</button>
+                            <button class="transport-btn" id="playPause">▶️</button>
+                            <button class="transport-btn" id="goToEnd">⏭️</button>
+                            <button class="transport-btn" id="loopToggle">🔁</button>
+                        </div>
+                        <div class="frame-info">
+                            <span>الفريم: <input type="number" id="currentFrame" value="1" min="1" max="300"> / 300</span>
+                            <span>FPS: <input type="number" id="fps" value="24" min="1" max="60"></span>
+                        </div>
+                        <div class="timeline-options">
+                            <label><input type="checkbox" id="onionSkin"> Onion Skin</label>
+                            <label><input type="checkbox" id="snapToFrames"> محاذاة للفريمات</label>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-container">
+                        <div class="timeline-tracks" id="timelineTracks">
+                            <!-- سيتم إنشاء المسارات ديناميكياً -->
+                        </div>
+                        <div class="timeline-ruler" id="timelineRuler"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- شريط الحالة -->
+        <footer class="status-bar">
+            <span id="statusText">جاهز</span>
+            <span id="coords">X: 0, Y: 0</span>
+            <span id="zoomLevel">100%</span>
+        </footer>
+    </div>
+
+    <!-- نافذة حفظ/فتح -->
+    <div class="modal" id="saveModal">
+        <div class="modal-content">
+            <h3>حفظ المشروع</h3>
+            <input type="text" id="projectName" placeholder="اسم المشروع">
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeModal()">إلغاء</button>
+                <button class="btn-primary" id="confirmSave">حفظ</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="engine.js"></script>
+    <script src="bones.js"></script>
+    <script src="timeline.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
